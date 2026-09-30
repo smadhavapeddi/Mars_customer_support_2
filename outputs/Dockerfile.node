@@ -1,0 +1,35 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache python3 py3-pip
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --production
+
+# Copy Python requirements
+COPY requirements-portal.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements-portal.txt
+
+# Copy application files
+COPY server.js .
+COPY mars_agent.py .
+COPY mars_agent_handler.py .
+COPY serverless_inference.py .
+COPY portal.html .
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Start server
+CMD ["node", "server.js"]

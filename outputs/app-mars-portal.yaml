@@ -1,0 +1,57 @@
+name: mars-support-portal
+services:
+- name: web
+  github:
+    repo: your-org/mars-support-portal
+    branch: main
+    build_command: |
+      npm install && \
+      pip install -r requirements-portal.txt && \
+      npm run build
+  http_port: 3000
+  envs:
+  - key: MODEL_ACCESS_KEY
+    scope: RUN_AND_BUILD_TIME
+    value: ${MODEL_ACCESS_KEY}
+  - key: DB_HOST
+    scope: RUN_TIME
+    value: ${db.HOSTNAME}
+  - key: DB_PORT
+    scope: RUN_TIME
+    value: "5432"
+  - key: DB_NAME
+    scope: RUN_TIME
+    value: support_db
+  - key: DB_USER
+    scope: RUN_TIME
+    value: postgres
+  - key: DB_PASSWORD
+    scope: RUN_TIME
+    value: ${db.PASSWORD}
+  - key: SERVERLESS_INFERENCE_URL
+    scope: RUN_TIME
+    value: https://inference.do-ai.run
+  - key: INFERENCE_MODEL
+    scope: RUN_TIME
+    value: claude-3-5-sonnet-20241022
+  - key: NODE_ENV
+    scope: RUN_TIME
+    value: production
+  health_check:
+    http_path: /health
+  http_request_count: 100
+  instance_count: 2
+  instance_size_slug: basic-m
+
+databases:
+- name: db
+  engine: PG
+  version: "15"
+  production: true
+  size: db-s-2vcpu-4gb
+
+static_sites:
+- name: docs
+  source_dir: docs
+  routes:
+  - path: /docs
